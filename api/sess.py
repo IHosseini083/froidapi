@@ -8,7 +8,12 @@ if TYPE_CHECKING:
 
 from bs4 import BeautifulSoup
 
-from .exceptions import AccessDeniedError, FRoidAPIError, NotFoundError
+from .exceptions import (
+    AccessDeniedError,
+    BadRequestError,
+    FRoidAPIError,
+    NotFoundError
+)
 
 
 class Session:
@@ -60,12 +65,14 @@ class Session:
         # TODO: validate response status code
         st_code = response.status
         if st_code not in (200, 302, 304):
-            if st_code in (401, 403):
-                raise AccessDeniedError(f"Access denied: {url!r}", st_code)
+            if st_code == 400:
+                raise BadRequestError(f"Bad request", st_code)
+            elif st_code in (401, 403):
+                raise AccessDeniedError(f"Access denied", st_code)
             elif st_code == 404:
-                raise NotFoundError(f"Not found: {url!r}", st_code)
+                raise NotFoundError(f"Not found", st_code)
             else:
-                raise FRoidAPIError(f"Unknown error: {url!r}", st_code)
+                raise FRoidAPIError(f"Unknown error", st_code)
         return response
 
     async def request(self, method: str, endpoint: str, **kwargs) -> ClientResponse:

@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from .models import RegisteredUser, UserRegister
 
-router = APIRouter()
+router = APIRouter(tags=["Users"], prefix="/users")
 
 
 @router.post(

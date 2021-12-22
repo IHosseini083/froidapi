@@ -1,12 +1,19 @@
-from typing import Optional
+from typing import Any, Dict, Optional
 
 
 class FRoidAPIError(Exception):
-    """Base exception class for all the api errors."""
+    """Base exception class for all the API errors."""
 
     def __init__(self, msg: str, code: Optional[int] = None) -> None:
         self.msg = msg
         self.code = code
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert the exception to a dictionary."""
+        return {
+            "status": self.code,
+            "message": self.msg,
+        }
 
 
 class NotFoundError(FRoidAPIError):
@@ -19,3 +26,7 @@ class AccessDeniedError(FRoidAPIError):
 
 class ResponseError(FRoidAPIError):
     """Raised when the response is not valid and cannot be parsed."""
+
+
+class BadRequestError(FRoidAPIError):
+    """Raised when the request is invalid."""
