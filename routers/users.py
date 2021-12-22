@@ -2,13 +2,10 @@ from fastapi import APIRouter
 
 from .models import RegisteredUser, UserRegister
 
-users_router = APIRouter(
-    tags=["users"],
-    prefix="/users"
-)
+router = APIRouter()
 
 
-@users_router.post(
+@router.post(
     "/register",
     response_model=RegisteredUser,
     summary="User registration",

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import AnyUrl, BaseModel, EmailStr, Field
 
 
 class BaseUser(BaseModel):
@@ -43,3 +43,26 @@ class UserRegister(BaseUser):
 
 class RegisteredUser(BaseUser):
     """Model for registered users."""
+
+
+class SearchResult(BaseModel):
+    """Model for search result."""
+    id: int = Field(
+        ...,
+        description=(
+            "The unique identifier of the post. "
+            "This is used to identify the post in the farsroid website."
+        ),
+        example=12350
+    )
+    title: str = Field(
+        ...,
+        description="The title of the post.",
+        example="clash of clans",
+        min_length=3
+    )
+    url: AnyUrl = Field(
+        ...,
+        description="The URL of the post.",
+        example="https://www.farsroid.com/clash-of-clans/"
+    )

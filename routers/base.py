@@ -1,7 +1,5 @@
-from fastapi import APIRouter
+from aiohttp import ClientSession
+from api import APIHandler as FroidAPIHandler
 
-from .users import users_router
-
-# TODO: add dependencies for routers in base router
-base_router = APIRouter(prefix="/v1")
-base_router.include_router(users_router)
+api_session = ClientSession()
+api_handler = FroidAPIHandler(api_session)
