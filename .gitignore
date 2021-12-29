@@ -145,3 +145,7 @@ cython_debug/
 # database
 *.db
 *.sqlite3
+
+# Custom files
+run.bat
+TODO.txt

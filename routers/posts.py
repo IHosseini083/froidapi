@@ -1,21 +1,34 @@
-from typing import Optional
+from enum import Enum
+from typing import List, Optional
 
+from api.exceptions import BadRequestError, NotFoundError
+from api.models import Comment
 from fastapi import APIRouter, Query
 
-from api.exceptions import NotFoundError
-from .base import api_handler
+from .base import api_handler, raise_error
 from .models import PaginatedResult, PostStatistics, SearchItem
 from .utils import decode_html_entities
 
-router = APIRouter(
-    tags=["Posts"],
-    prefix="/posts",
-    responses={
-        400: {"description": "Bad request, invalid parameters were sent."},
-    }
-)
+router = APIRouter(tags=["Posts"], prefix="/posts")
 
 
+########## Enums ##########
+class CommentsOrder(str, Enum):
+    """Order comments in `asceding` or `descending` order."""
+
+    ASC = "asc"
+    DESC = "desc"
+
+
+class CommentsOrderBy(str, Enum):
+    """Order comments by different fields (e.g. `date`)."""
+
+    DATE = "date"
+    DATE_GMT = "date_gmt"    
+    ID = "id"
+
+
+########## Routes ##########
 @router.get(
     "/search",
     response_model=PaginatedResult,
@@ -35,13 +48,17 @@ async def search(
         page: Optional[int] = Query(
             None,
             title="Page",
-            description="The page number to fetch.",
+            description="The page number to fetch. Default is 1.",
             gt=0
         ),
         per_page: Optional[int] = Query(
             None,
             title="Per Page",
-            description="The number of results per page.",
+            description=(
+                "The number of results per page. "
+                "If not specified, the default is 10 results per page. "
+                "The maximum is 100 results per page."
+            ),
             gt=0
         )
 ) -> PaginatedResult:
@@ -55,8 +72,8 @@ async def search(
         for item in res
     ]
     return PaginatedResult(
-        page=page or 1,
-        per_page=per_page or 10,
+        page=page or 1,  # Default page is 1
+        items_count=len(items),
         items=items
     )
 
@@ -73,17 +90,22 @@ async def get_post_statistics(
             ...,
             title="Post ID",
             description=(
-                    "The ID of the post to get statistics for. "
-                    "This can be found in search results."
+                "The ID of the post to get statistics for. "
+                "This can be found in search results."
             ),
             example=10555,
             gt=0
         )
 ) -> PostStatistics:
-    res = await api_handler.get_post_statistics(post_id)
+    try:
+        res = await api_handler.get_post_statistics(post_id)
+        # farsroid API returns 400 if the post is not found!
+    except (BadRequestError, NotFoundError):
+        res = None
+    if not res:
+        # TODO: extend the error details (e.g. the post ID, status code, etc.)
+        raise_error(404, message=f"post {post_id} not found")
     data = res["data"][0]
-    if not data:
-        raise NotFoundError(msg=f"post {post_id!r} not found", code=404)
     return PostStatistics(
         post_id=data["post_id"],
         views=data["views"],
@@ -93,3 +115,69 @@ async def get_post_statistics(
         weekly_downloads=data["download_week"],
         today_downloads=data["download_today"]
     )
+
+
+@router.get(
+    "/{post_id}/comments",
+    response_model=List[Comment],
+    summary="Get the comments that were made on a post (approved ones).",
+    response_description="The list of comments.",
+    status_code=200
+)
+async def get_post_comments(
+        post_id: int = Query(
+            ...,
+            title="Post ID",
+            description=(
+                "The ID of the post to get comments for. "
+                "This can be found in search results."
+            ),
+            example=10555,
+            gt=0
+        ),
+        page: int = Query(
+            1,
+            title="Page",
+            description="The page number to fetch.",
+            gt=0,
+            lt=101
+        ),
+        per_page: int = Query(
+            10,
+            title="Per Page",
+            description="The number of results per page.",
+            gt=0,
+            lt=101
+        ),
+        search: Optional[str] = Query(
+            None,
+            title="Search",
+            description="The search query to filter comments by.",
+            min_length=3,
+        ),
+        order: Optional[CommentsOrder] = Query(
+            None,
+            title="Order",
+            description="The order to fetch comments in.",
+            example="desc"
+        ),
+        order_by: Optional[CommentsOrderBy] = Query(
+            None,
+            title="Order By",
+            description="The field to order comments by.",
+            example="date_gmt"
+        )
+) -> List[Comment]:
+    # TODO: add pagination and sorting of comments
+    try:
+        return await api_handler.get_comments_by(
+            "post", 
+            post_id,
+            page=page,
+            per_page=per_page,
+            search=search,
+            order_by=order_by.value if order_by else None,
+            order=order.value if order else None
+        )
+    except (BadRequestError, NotFoundError):
+        raise_error(404, message=f"post {post_id} not found")
