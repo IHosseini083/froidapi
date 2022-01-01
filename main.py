@@ -20,12 +20,27 @@ base_router.include_router(users.router)
 # Every endpoint related to posts should be included in this router:
 base_router.include_router(posts.router)
 
+# Define metadata for the swagger API tags
+endpoint_tags = [
+    {
+        "name": "Users",
+        "description": "User related endpoints (login, register, etc.)",
+    },
+    {
+        "name": "Posts",
+        "description": "Get information about posts and their properties.",
+    }
+]
+
 app = FastAPI(
     debug=True,  # Set debug to True to see the error message in the browser
     title="Froid API",
     version="1.0.0",
     description="An Unofficial Web API For [Farsroid](https://farsroid.com/) Website.",
-    contact={"email": "IHosseini@pm.me"}
+    contact={"email": "IHosseini@pm.me", "name": "Iliya Hosseini"},
+    openapi_tags=endpoint_tags,
+    openapi_url="/api/v1/openapi.json",  # openapi configuration for v1
+    redoc_url=None,  # Disable the redoc_url to avoid the redoc-ui to be loaded
 )
 app.include_router(base_router)
 
