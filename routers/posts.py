@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List, Optional
 
 from api.exceptions import BadRequestError, NotFoundError
-from api.models import Comment
+from api.models import Comment, Post
 from fastapi import APIRouter, Query
 
 from .base import api_handler, raise_error
@@ -24,7 +24,7 @@ class CommentsOrderBy(str, Enum):
     """Order comments by different fields (e.g. `date`)."""
 
     DATE = "date"
-    DATE_GMT = "date_gmt"    
+    DATE_GMT = "date_gmt"
     ID = "id"
 
 
@@ -76,6 +76,29 @@ async def search(
         items_count=len(items),
         items=items
     )
+
+
+# TODO: add a dependency for `post_id` in all post routes (except /search route)
+@router.get(
+    "/{post_id}",
+    response_model=Post,
+    summary="Get a post on farsroid.com by its ID.",
+    response_description="The post details.",
+    status_code=200
+)
+async def get_post(
+        post_id: int = Query(
+            ...,
+            title="Post ID",
+            description="The ID of the post to fetch.",
+            example=10555,
+            gt=0
+        )
+) -> Post:
+    try:
+        return await api_handler.get_post(post_id)
+    except NotFoundError:
+        raise_error(404, message=f"post {post_id} not found")
 
 
 @router.get(
@@ -168,10 +191,10 @@ async def get_post_comments(
             example="date_gmt"
         )
 ) -> List[Comment]:
-    # TODO: add pagination and sorting of comments
+    # TODO: add pagination and sorting of comments => DONE
     try:
         return await api_handler.get_comments_by(
-            "post", 
+            "post",
             post_id,
             page=page,
             per_page=per_page,

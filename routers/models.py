@@ -1,6 +1,6 @@
 from typing import List
 
-from pydantic import AnyUrl, BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, HttpUrl
 
 
 class BaseUser(BaseModel):
@@ -63,7 +63,7 @@ class SearchItem(BaseModel):
         example="clash of clans",
         min_length=3
     )
-    url: AnyUrl = Field(
+    url: HttpUrl = Field(
         ...,
         description="The URL of the post.",
         example="https://www.farsroid.com/clash-of-clans/"
@@ -81,11 +81,10 @@ class PaginatedResult(BaseModel):
         example=1,
         gt=0
     )
-    per_page: int = Field(
+    items_count: int = Field(
         ...,
-        description="The number of items per page.",
-        example=10,
-        gt=0
+        description="The number of items returned in the result.",
+        example=1
     )
     items: List = Field(
         ...,
@@ -141,4 +140,3 @@ class PostStatistics(BaseModel):
         description="The number of views for the post.",
         example=2147472
     )
-

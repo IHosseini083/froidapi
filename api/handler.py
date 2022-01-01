@@ -3,9 +3,11 @@ from urllib.parse import urlencode
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
+    from .models import Post
 
 from .exceptions import BadRequestError
 from .models import Comment
+from .parsers import PostParser
 from .sess import Session
 from .utils import render_content
 
@@ -65,7 +67,7 @@ class APIHandler:
         endpoint = f"/api/posts/?ids={','.join(map(str, ids))}"
         return await self._sess.get_json(endpoint)
 
-    async def get_comments_by(self, by: str, _id: int, **kwargs) -> List[Comment]:
+    async def get_comments_by(self, by: str, _id: int, **kwargs) -> List["Comment"]:
         """Get comments by post id, parent id or comment id.
 
         Parameters:
@@ -76,7 +78,7 @@ class APIHandler:
         Returns:
             `List[Comment]`: A list of :class:`Comment` objects.
         """
-        # TODO: Add comment related arguments to the API call
+        # TODO: Add comment related arguments to the API call => DONE
         if by not in ["post", "parent", "comment"]:
             raise BadRequestError(f"Invalid value for `by`: {by!r}", 400)
         if not isinstance(_id, int):
@@ -103,3 +105,16 @@ class APIHandler:
             )
             for comment in comments
         ]
+
+    async def get_post(self, post_id: int) -> "Post":
+        """Get a post data from `farsroid.com` by its ID.
+
+        Parameters:
+            post_id (`int`): The post ID to get.
+
+        Returns:
+            `Post`: A :class:`Post` object.
+        """
+        post_soup = await self._sess.get_soup(f"/?p={post_id}")
+        parser = PostParser(post_soup)
+        return parser.post_obj()

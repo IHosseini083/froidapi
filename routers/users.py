@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from .models import RegisteredUser, UserRegister
 
+# TODO: exclude user endpoints from docs
 router = APIRouter(tags=["Users"], prefix="/users")
 
 

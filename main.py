@@ -1,9 +1,11 @@
+from typing import Any, Callable
+
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from api import FRoidAPIError
-from routers import users, posts
+from routers import posts, users
 from routers.base import api_session
 
 base_router = APIRouter(
@@ -28,6 +30,12 @@ app = FastAPI(
 app.include_router(base_router)
 
 
+# TODO: expand this middleware to handle every request and response
+@app.middleware("http")
+async def get_current_request(request: Request, call_next: Callable[..., Any]) -> Any:
+    return await call_next(request)
+    
+
 # TODO: Handle exceptions for API and report them to the admin. 
 @app.exception_handler(FRoidAPIError)
 async def handle_api_error(_: Request, exc: FRoidAPIError) -> JSONResponse:
@@ -50,12 +58,12 @@ async def http_exception_handler(_: Request, exc: StarletteHTTPException) -> JSO
 
 # TODO: Complete startup and shutdown events
 @app.on_event("startup")
-async def startup_event():
+async def startup_event() -> None:
     ...
 
 
 @app.on_event("shutdown")
-async def shutdown_event():
+async def shutdown_event() -> None:
     """Operations to perform when the server shuts down."""
     # TODO: close database connection and API session for requests
     await api_session.close()
