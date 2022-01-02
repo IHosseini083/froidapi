@@ -110,8 +110,8 @@ class RelatedPost(BaseModel):
     )
 
 
-class Post(BaseModel):
-    """Represents a post on the site."""
+class PostDownloadPgae(BaseModel):
+    """Represents a post's download page."""
     post_id: int = Field(
         ...,
         title="Post ID",

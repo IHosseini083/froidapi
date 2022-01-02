@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from json import dumps as json_dumps
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from .models import DownloadData, Post, PostMedia, RelatedPost
+from .models import DownloadData, PostDownloadPgae, PostMedia, RelatedPost
 from .utils import by_pattern
 
 if TYPE_CHECKING:
@@ -182,9 +182,9 @@ class PostParser(Parser):
             for a in dl_links
         ]
 
-    def post_obj(self) -> Post:
+    def post_obj(self) -> PostDownloadPgae:
         """Return the :class:`Post` object for the post."""
-        return Post(
+        return PostDownloadPgae(
             post_id=self.post_id,
             title=self.title,
             description=self.description,
