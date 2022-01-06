@@ -4,6 +4,7 @@ from database.db import get_session
 from database.exceptions import (
     AuthenticationError,
     OldCredentialsError,
+    TokenNotFoundError,
     UserNotFoundError
 )
 from fastapi import APIRouter, Body, Depends
@@ -87,7 +88,6 @@ def get_me(
     "/me",
     response_model=None,
     summary="Delete user's profile",
-    response_description="The deleted user's profile data.",
     status_code=204
 )
 def delete_me(
@@ -125,3 +125,60 @@ def update_me(
         return db_utils.update_user_password(db, db_user, new_password)
     except OldCredentialsError as e:
         raise_error(400, message=str(e))
+
+
+# create a token for the user
+@router.post(
+    "/me/newtoken",
+    response_model=schemas.UserToken,
+    summary="Create a new token for the user.",
+    response_description="The generated token.",
+    status_code=201
+)
+def create_token(
+    user: UserCredentials = Depends(get_user_cred),
+    db: "Session" = Depends(get_session)
+) -> models.Token:
+    db_user = user_auth_handler(db, user)
+    if db_user.token:
+        raise_error(400, message=f"User {user.username!r} already has a token.")
+    return db_utils.create_token(db, db_user)
+
+
+# get user's token
+@router.post(
+    "/me/token",
+    response_model=schemas.UserToken,
+    summary="Get user's token.",
+    response_description="The user's token data.",
+    status_code=200
+)
+def get_token(
+    user: UserCredentials = Depends(get_user_cred),
+    db: "Session" = Depends(get_session)
+) -> models.Token:
+    db_user = user_auth_handler(db, user)
+    if not db_user.token:
+        raise_error(404, message=f"User {user.username!r} has no token.")
+    return db_user.token
+
+
+# delete user's token
+@router.delete(
+    "/me/token/revoke",
+    response_model=None,
+    summary="Revoke the user's token.",
+    status_code=204
+)
+def revoke_token(
+    user: UserCredentials = Depends(get_user_cred),
+    db: "Session" = Depends(get_session)
+) -> None:
+    db_user = user_auth_handler(db, user)
+    try:
+        db_utils.revoke_token(db, db_user)
+    except TokenNotFoundError as e:
+        raise_error(
+            404,
+            message=f"User {user.username!r} does not have any token to revoke."
+        )

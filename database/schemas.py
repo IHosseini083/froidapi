@@ -26,11 +26,11 @@ class UserToken(BaseModel):
         example=32,
         gt=0
     )
-    created_at: str = Field(
+    created_at: dt = Field(
         ...,
         title="Creation datetime",
         description="Exact datetime of the token creation.",
-        example="2020-01-01 00:00:00"
+        example="2022-01-06T23:04:17.073179"
     )
 
     class Config:

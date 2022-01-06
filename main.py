@@ -1,6 +1,7 @@
 from typing import Any, Callable
 
 from fastapi import APIRouter, FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -48,6 +49,14 @@ app = FastAPI(
 app.include_router(base_router)
 # mount the static files path
 app.mount("/static", StaticFiles(directory="static"), name="static")
+# add CORS middleware to the app 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 
 # TODO: expand this middleware to handle every request and response

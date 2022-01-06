@@ -1,3 +1,5 @@
+from database.models import Token
+
 class DatabaseError(Exception):
     """Base exception class for all the database errors."""
 
@@ -15,4 +17,8 @@ class AuthenticationError(DatabaseError):
 
 class OldCredentialsError(DatabaseError):
     """Raised when old credentials are used."""
+    
+    
+class TokenNotFoundError(DatabaseError):
+    """Raised when a token is not found."""
     

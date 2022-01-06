@@ -77,5 +77,5 @@ class Token(Base):
     @staticmethod
     def generate_token_string() -> str:
         """Generate a random 32-character token string."""
-        token = token_urlsafe(32)
-        return sha256(token.encode()).hexdigest()[:len(token)]
+        token = token_urlsafe(32).encode()
+        return sha256(token).hexdigest()[:32]
