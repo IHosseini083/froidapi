@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List, Optional
 
 from api.exceptions import BadRequestError, NotFoundError
-from api.models import Comment, Post
+from api.models import Comment, PostDownloadPgae
 from fastapi import APIRouter, Query
 
 from .base import api_handler, raise_error
@@ -78,12 +78,11 @@ async def search(
     )
 
 
-# TODO: add a dependency for `post_id` in all post routes (except /search route)
 @router.get(
-    "/{post_id}",
-    response_model=Post,
-    summary="Get a post on farsroid.com by its ID.",
-    response_description="The post details.",
+    "/{post_id}/dp",
+    response_model=PostDownloadPgae,
+    summary="Get a post's download page (dp) by its ID.",
+    response_description="The post's download page data.",
     status_code=200
 )
 async def get_post(
@@ -94,7 +93,7 @@ async def get_post(
             example=10555,
             gt=0
         )
-) -> Post:
+) -> PostDownloadPgae:
     try:
         return await api_handler.get_post(post_id)
     except NotFoundError:

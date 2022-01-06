@@ -3,7 +3,7 @@ from urllib.parse import urlencode
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
-    from .models import Post
+    from .models import PostDownloadPgae
 
 from .exceptions import BadRequestError
 from .models import Comment
@@ -106,14 +106,14 @@ class APIHandler:
             for comment in comments
         ]
 
-    async def get_post(self, post_id: int) -> "Post":
-        """Get a post data from `farsroid.com` by its ID.
+    async def get_post(self, post_id: int) -> "PostDownloadPgae":
+        """Get a post's download page data from `farsroid.com` by its ID.
 
         Parameters:
             post_id (`int`): The post ID to get.
 
         Returns:
-            `Post`: A :class:`Post` object.
+            A :class:`PostDownloadPgae` object containing data like the post's title, download links, etc.
         """
         post_soup = await self._sess.get_soup(f"/?p={post_id}")
         parser = PostParser(post_soup)
