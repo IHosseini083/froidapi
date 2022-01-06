@@ -1,50 +1,32 @@
-from typing import List
+import typing as t
 
-from pydantic import BaseModel, EmailStr, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl
 
 
-class BaseUser(BaseModel):
-    """Base model for user data"""
+class UserCredentials(BaseModel):
+    """User's credentials for authentication purposes."""
     username: str = Field(
         ...,
-        description=(
-            "The username of the user. "
-            "Must be unique and can only contain letters, "
-            "numbers, and underscores."
-        ),
+        title="Username",
+        description="The username of the user.",
         example="Reza",
         min_length=3,
-        max_length=20,
-        regex=r"^[a-zA-Z0-9_]{3,20}$"
+        max_length=20
     )
-    email: EmailStr = Field(
-        ...,
-        description=(
-            "User's email address. "
-            "Must be unique and valid email address like "
-            "'example@domain.com'."
-        ),
-        example="example@domain.com"
-    )
-
-
-class UserRegister(BaseUser):
-    """Model for user registration"""
     password: str = Field(
         ...,
+        title="Password",
         description=(
-            "User's password. "
+            "The password of the user. "
             "Must be at least 8 characters long and "
-            "consist of letters, numbers, and other "
-            "characters."
+            "do not contain spaces."
         ),
-        example="strong_password",
         min_length=8,
+        max_length=32,
+        # password must not contain spaces
+        regex="^[^ ]+$",
+        example="some_strong_password"
     )
-
-
-class RegisteredUser(BaseUser):
-    """Model for registered users."""
 
 
 class SearchItem(BaseModel):
@@ -86,7 +68,7 @@ class PaginatedResult(BaseModel):
         description="The number of items returned in the result.",
         example=1
     )
-    items: List = Field(
+    items: t.List = Field(
         ...,
         description="The list of items in the result.",
         example=[

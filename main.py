@@ -1,10 +1,12 @@
 from typing import Any, Callable
 
 from fastapi import APIRouter, FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from api import FRoidAPIError
+from database import db
 from routers import posts, users
 from routers.base import api_session
 
@@ -39,19 +41,22 @@ app = FastAPI(
     description="An Unofficial Web API For [Farsroid](https://farsroid.com/) Website.",
     contact={"email": "IHosseini@pm.me", "name": "Iliya Hosseini"},
     openapi_tags=endpoint_tags,
-    openapi_url="/api/v1/openapi.json",  # openapi configuration for v1
+    openapi_url="/v1/openapi.json",  # openapi configuration for v1
     redoc_url=None,  # Disable the redoc_url to avoid the redoc-ui to be loaded
+    docs_url="/v1/docs"
 )
 app.include_router(base_router)
+# mount the static files path
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 # TODO: expand this middleware to handle every request and response
 @app.middleware("http")
 async def get_current_request(request: Request, call_next: Callable[..., Any]) -> Any:
     return await call_next(request)
-    
 
-# TODO: Handle exceptions for API and report them to the admin. 
+
+# TODO: Handle exceptions for API and report them to the admin.
 @app.exception_handler(FRoidAPIError)
 async def handle_api_error(_: Request, exc: FRoidAPIError) -> JSONResponse:
     """Handle API errors."""
@@ -74,7 +79,8 @@ async def http_exception_handler(_: Request, exc: StarletteHTTPException) -> JSO
 # TODO: Complete startup and shutdown events
 @app.on_event("startup")
 async def startup_event() -> None:
-    ...
+    # Initialize the database connection
+    db.init_db()
 
 
 @app.on_event("shutdown")
