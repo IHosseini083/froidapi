@@ -9,6 +9,8 @@ Write you TODOs here and work on them without getting lost in your journey.
 - [ ] Add OAuth2 based authentication for `/v1/posts/` endpoints.
 - [ ] Add rate limiting to specific endpoints.
 - [ ] Add more details in error responses.
+- [ ] Add option for changing email.
+- [ ] Add an option to restore the forgotten password.  
 
 ## In Progress 👨🏻‍💻
 

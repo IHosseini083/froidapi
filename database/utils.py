@@ -9,6 +9,7 @@ from . import models, schemas
 from .exceptions import (
     AuthenticationError,
     OldCredentialsError,
+    TokenNotFoundError,
     UserNotFoundError
 )
 
@@ -111,13 +112,33 @@ def update_user_password(db: "Session", user: models.User, new_password: str) ->
     return user
 
 
-def create_token(db: "Session", user: models.User) -> models.User:
-    ...
+def create_token(db: "Session", user: models.User) -> models.Token:
+    """Create a new token for a user."""
+    token_string = models.Token.generate_token_string()
+    token = models.Token(token=token_string, user_id=user.id)
+    db.add(token)
+    db.commit()
+    db.refresh(token)
+    return token
 
 
-def delete_token(db: "Session", user: models.User) -> models.User:
-    ...
+def revoke_token(db: "Session", user: models.User) -> models.Token:
+    """Revoke a user's token."""
+    if not user.token:
+        raise TokenNotFoundError(
+            f"Could not find any token for user {user.username!r} "
+            "to revoke."
+        )
+    user_token = user.token
+    db.delete(user_token)
+    db.commit()
+    db.refresh(user)
+    return user_token
 
 
-def get_token(db: "Session", user: models.User) -> models.Token:
-    ...
+def verify_token(db: "Session", token_string: str) -> models.Token:
+    """Verify that a token is valid."""
+    token = db.query(models.Token).filter(models.Token.token == token_string).first()
+    if not token:
+        raise TokenNotFoundError(f"Token {token_string!r} not found.")
+    return token
