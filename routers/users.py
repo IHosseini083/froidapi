@@ -127,24 +127,6 @@ def update_me(
         raise_error(400, message=str(e))
 
 
-# create a token for the user
-@router.post(
-    "/me/newtoken",
-    response_model=schemas.UserToken,
-    summary="Create a new token for the user.",
-    response_description="The generated token.",
-    status_code=201
-)
-def create_token(
-    user: UserCredentials = Depends(get_user_cred),
-    db: "Session" = Depends(get_session)
-) -> models.Token:
-    db_user = user_auth_handler(db, user)
-    if db_user.token:
-        raise_error(400, message=f"User {user.username!r} already has a token.")
-    return db_utils.create_token(db, db_user)
-
-
 # get user's token
 @router.post(
     "/me/token",
@@ -161,6 +143,25 @@ def get_token(
     if not db_user.token:
         raise_error(404, message=f"User {user.username!r} has no token.")
     return db_user.token
+
+
+# create a token for the user
+@router.post(
+    "/me/token/new",
+    response_model=schemas.UserToken,
+    summary="Create a new token for the user.",
+    response_description="The generated token.",
+    status_code=201
+)
+def create_token(
+    user: UserCredentials = Depends(get_user_cred),
+    db: "Session" = Depends(get_session)
+) -> models.Token:
+    db_user = user_auth_handler(db, user)
+    if db_user.token:
+        raise_error(
+            400, message=f"User {user.username!r} already has a token.")
+    return db_utils.create_token(db, db_user)
 
 
 # delete user's token

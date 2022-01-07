@@ -2,10 +2,12 @@ from typing import Any, Callable
 
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+import cfg
 from api import FRoidAPIError
 from database import db
 from routers import posts, users
@@ -36,27 +38,37 @@ endpoint_tags = [
 ]
 
 app = FastAPI(
-    debug=True,  # Set debug to True to see the error message in the browser
-    title="Froid API",
-    version="1.0.0",
-    description="An Unofficial Web API For [Farsroid](https://farsroid.com/) Website.",
-    contact={"email": "IHosseini@pm.me", "name": "Iliya Hosseini"},
+    debug=cfg.DEBUG,  # Set debug to True to see the error message in the browser
+    title=cfg.APP_NAME,
+    version=cfg.APP_VERSION,
+    description=cfg.APP_DESCRIPTION,
+    contact=cfg.CONTACT_INFO,
     openapi_tags=endpoint_tags,
-    openapi_url="/v1/openapi.json",  # openapi configuration for v1
+    openapi_url=cfg.OPENAPI_URL,
     redoc_url=None,  # Disable the redoc_url to avoid the redoc-ui to be loaded
-    docs_url="/v1/docs"
 )
 app.include_router(base_router)
 # mount the static files path
 app.mount("/static", StaticFiles(directory="static"), name="static")
-# add CORS middleware to the app 
+# add CORS middleware to the app
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # allow all origins
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
+    allow_origins=cfg.ORIGINS,
+    allow_credentials=cfg.ALLOW_CREDENTIALS,
+    allow_methods=cfg.ALLOW_METHODS,
+    allow_headers=cfg.ALLOW_HEADERS,
 )
+
+
+# override the default settings for the swagger UI
+@app.get(cfg.DOCS_URL, include_in_schema=False)
+def overriden_swagger_docs() -> HTMLResponse:
+    """Override the default swagger UI settings."""
+    return get_swagger_ui_html(
+        openapi_url=cfg.OPENAPI_URL,
+        title=cfg.DOCS_TITLE,
+        swagger_favicon_url=cfg.DOCS_FAVICON_URL
+    )
 
 
 # TODO: expand this middleware to handle every request and response
