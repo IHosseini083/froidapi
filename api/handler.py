@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import urlencode
 
 if TYPE_CHECKING:
-    from aiohttp import ClientSession
     from .models import PostDownloadPage
 
 from .exceptions import BadRequestError
@@ -17,8 +16,8 @@ class APIHandler:
 
     __slots__ = ("_sess",)
 
-    def __init__(self, session: "ClientSession", html_parser: Optional[str] = None) -> None:
-        self._sess = Session(session, html_parser)
+    def __init__(self, html_parser: Optional[str] = None) -> None:
+        self._sess = Session(html_parser)
 
     def __enter__(self) -> "APIHandler":
         return self
