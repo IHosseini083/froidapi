@@ -12,6 +12,21 @@ from .exceptions import (
 )
 
 
+def _validate_response(response: Response) -> Response:
+    """Validate the given response and return it if everything was ok."""
+    st_code = response.status_code
+    if st_code not in (200, 301, 302, 304):
+        if st_code == 400:
+            raise BadRequestError(f"Bad request", st_code)
+        elif st_code in (401, 403):
+            raise AccessDeniedError(f"Access denied", st_code)
+        elif st_code == 404:
+            raise NotFoundError(f"Not found", st_code)
+        else:
+            raise FRoidAPIError(f"Unknown error", st_code)
+    return response
+
+
 class Session:
     """An asynchronous session for requesting `farsroid.com` endpoints.
 
@@ -36,14 +51,14 @@ class Session:
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0",
     }
     """Headers to be added to every request."""
-    
+
     __slots__ = ("_sess", "_html_parser")
 
     def __init__(self, html_parser: Optional[str] = None) -> None:
         self._html_parser = html_parser or self.DEFAULT_HTML_PARSER
         if not isinstance(self._html_parser, str):
             raise TypeError("html_parser must be a string or None")
-        self._sess = AsyncClient()
+        self._sess = AsyncClient(follow_redirects=True)
         self._sess.headers.update(self.REQ_HEADERS)
 
     def __enter__(self) -> "Session":
@@ -54,22 +69,6 @@ class Session:
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         await self.close()
-
-    def _response_validator(self, response: Response, url: str) -> Response:
-        """Validate the given response and return it if everything was ok."""
-        if not url.startswith(self.BASE_URL):
-            raise ValueError(f"Invalid URL: {url!r}")
-        st_code = response.status_code
-        if st_code not in (200, 301, 302, 304):
-            if st_code == 400:
-                raise BadRequestError(f"Bad request", st_code)
-            elif st_code in (401, 403):
-                raise AccessDeniedError(f"Access denied", st_code)
-            elif st_code == 404:
-                raise NotFoundError(f"Not found", st_code)
-            else:
-                raise FRoidAPIError(f"Unknown error", st_code)
-        return response
 
     async def request(self, method: str, endpoint: str, **kwargs) -> Response:
         """Make a request to the given URL and return the response.
@@ -83,8 +82,8 @@ class Session:
             :class:`httpx.Response`: The response object.
         """
         url = urljoin(self.BASE_URL, endpoint)
-        resp = await self._sess.request(method, url, follow_redirects=True, **kwargs)
-        return self._response_validator(resp, url)
+        resp = await self._sess.request(method, url, **kwargs)
+        return _validate_response(resp)
 
     async def get_json(self, endpoint: str, **kwargs) -> Any:
         """Make a GET request to the given URL and return the response as JSON data.
