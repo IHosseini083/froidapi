@@ -12,13 +12,13 @@ if TYPE_CHECKING:
 SQLALCHEMY_DATABASE_URL: str = os.getenv(
     "DATABASE_URL",
     "sqlite:///froidapi.db"
-)
+).replace("postgres://", "postgresql://", 1)
 """
 Database URL for SQLAlchemy to connect to. 
 It can be retrieved from the environment variable `DATABASE_URL` or
 it can be set manually.
 """
-LOCAL_DB: bool = "sqlite" in SQLALCHEMY_DATABASE_URL
+LOCAL_DB: bool = "sqlite://" in SQLALCHEMY_DATABASE_URL
 """Whether the database is local or remote. If it is local,
 then add `check_same_thread` to the :class:`sqlalchemy.orm.sessionmaker` options
 """
