@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field, HttpUrl
@@ -110,7 +109,7 @@ class RelatedPost(BaseModel):
     )
 
 
-class PostDownloadPgae(BaseModel):
+class PostDownloadPage(BaseModel):
     """Represents a post's download page."""
     post_id: int = Field(
         ...,
@@ -189,4 +188,40 @@ class PostDownloadPgae(BaseModel):
         title="Google Play URL",
         description="The URL to the post on Google Play.",
         example="https://play.google.com/store/apps/details?id=com.gameloft.android.ANMP.GloftA8HM"
+    )
+
+
+class LegacySearchItem(BaseModel):
+    """Model representation of a legacy search item."""
+    post_id: Optional[int] = Field(
+        None,
+        title="Post ID",
+        description="The ID of the post.",
+        example=10555,
+    )
+    url: HttpUrl = Field(
+        ...,
+        title="URL",
+        description="The URL to the post.",
+        example="https://www.farsroid.com/?p=10555"
+    )
+    title: str = Field(
+        ...,
+        title="Title",
+        description="The title of the post."
+    )
+    thumbnail: HttpUrl = Field(
+        ...,
+        title="Thumbnail URL",
+        description="The URL to the thumbnail of the post."
+    )
+    description: str = Field(
+        ...,
+        title="Description",
+        description="A short description of the post."
+    )
+    meta: Optional[Dict[str, str]] = Field(
+        None,
+        title="Meta",
+        description="Some metadata for the post (version, etc.)."
     )

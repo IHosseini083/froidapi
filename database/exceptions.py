@@ -1,5 +1,3 @@
-from database.models import Token
-
 class DatabaseError(Exception):
     """Base exception class for all the database errors."""
 
