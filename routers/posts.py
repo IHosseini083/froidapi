@@ -1,15 +1,15 @@
 from enum import Enum
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
-from api.exceptions import BadRequestError, NotFoundError
-from api.models import Comment, PostDownloadPgae
-from database import utils as db_utils
-from database.db import get_session
-from database.exceptions import TokenNotFoundError
 from fastapi import APIRouter, Depends, Query
 from fastapi.security import APIKeyHeader
 from sqlalchemy.orm import Session
 
+from api.exceptions import BadRequestError, NotFoundError
+from api.models import Comment, PostDownloadPage
+from database import utils as db_utils
+from database.db import get_session
+from database.exceptions import TokenNotFoundError
 from .base import api_handler, raise_error
 from .models import PaginatedResult, PostStatistics, SearchItem
 from .utils import decode_html_entities
@@ -25,8 +25,8 @@ api_key_header = APIKeyHeader(
 
 
 def get_api_token(
-    x_api_token: Optional[str] = Depends(api_key_header), 
-    db: "Session" = Depends(get_session)
+        x_api_token: Optional[str] = Depends(api_key_header),
+        db: "Session" = Depends(get_session)
 ) -> str:
     """Get API token from the request header."""
     if not x_api_token:
@@ -41,16 +41,37 @@ def get_api_token(
     return x_api_token
 
 
+def get_common_search_queries(
+        query: str = Query(
+            ...,
+            title="Query",
+            description="The query to search for.",
+            min_length=1,
+            example="clash of clans",
+            alias="q"
+        ),
+        page: Optional[int] = Query(
+            None,
+            title="Page",
+            description="The page number to fetch. Default is 1.",
+            gt=0
+        )
+) -> Dict[str, Any]:
+    return {"query": query, "page": page}
+
+
 router = APIRouter(
     tags=["Posts"],
     prefix="/posts",
-    dependencies=[Depends(get_api_token)]
+    dependencies=[Depends(get_api_token)],
+    responses={
+        401: {"description": "Unauthorized, invalid or missing API token."},
+    }
 )
 
 
-########## Enums ##########
 class CommentsOrder(str, Enum):
-    """Order comments in `asceding` or `descending` order."""
+    """Order comments in `ascending` or `descending` order."""
 
     ASC = "asc"
     DESC = "desc"
@@ -64,40 +85,28 @@ class CommentsOrderBy(str, Enum):
     ID = "id"
 
 
-########## Routes ##########
 @router.get(
     "/search",
     response_model=PaginatedResult,
+    response_model_exclude_unset=True,  # exclude `None` values from the response
     summary="Search for a post on farsroid.com.",
     response_description="The search results.",
     status_code=200
 )
 async def search(
-        query: str = Query(
-            ...,
-            title="Query",
-            description="The query to search for.",
-            min_length=3,
-            example="clash of clans",
-            alias="q"
-        ),
-        page: Optional[int] = Query(
-            None,
-            title="Page",
-            description="The page number to fetch. Default is 1.",
-            gt=0
-        ),
+        common_queries: Dict[str, Any] = Depends(get_common_search_queries),
         per_page: Optional[int] = Query(
             None,
             title="Per Page",
             description=(
-                "The number of results per page. "
-                "If not specified, the default is 10 results per page. "
-                "The maximum is 100 results per page."
+                    "The number of results per page. "
+                    "If not specified, the default is 10 results per page. "
+                    "The maximum is 100 results per page."
             ),
             gt=0
         )
 ) -> PaginatedResult:
+    query, page = common_queries["query"], common_queries["page"]
     res = await api_handler.search(query, page, per_page)
     items = [
         SearchItem(
@@ -115,8 +124,28 @@ async def search(
 
 
 @router.get(
+    "/search/legacy",
+    response_model=PaginatedResult,
+    summary="Search for a post on farsroid.com using the legacy search API.",
+    response_description="The search results.",
+    status_code=200
+)
+async def legacy_search(
+        common_queries: Dict[str, Any] = Depends(get_common_search_queries)
+) -> PaginatedResult:
+    query, page = common_queries["query"], common_queries["page"]
+    items, total_pages = await api_handler.legacy_search(query, page)
+    return PaginatedResult(
+        total_pages=total_pages,
+        page=page or 1,  # Default page is 1
+        items_count=len(items),
+        items=items
+    )
+
+
+@router.get(
     "/{post_id}/dp",
-    response_model=PostDownloadPgae,
+    response_model=PostDownloadPage,
     summary="Get a post's download page (dp) by its ID.",
     response_description="The post's download page data.",
     status_code=200
@@ -129,7 +158,7 @@ async def get_post(
             example=10555,
             gt=0
         )
-) -> PostDownloadPgae:
+) -> PostDownloadPage:
     try:
         return await api_handler.get_post(post_id)
     except NotFoundError:
@@ -148,8 +177,8 @@ async def get_post_statistics(
             ...,
             title="Post ID",
             description=(
-                "The ID of the post to get statistics for. "
-                "This can be found in search results."
+                    "The ID of the post to get statistics for. "
+                    "This can be found in search results."
             ),
             example=10555,
             gt=0
@@ -187,8 +216,8 @@ async def get_post_comments(
             ...,
             title="Post ID",
             description=(
-                "The ID of the post to get comments for. "
-                "This can be found in search results."
+                    "The ID of the post to get comments for. "
+                    "This can be found in search results."
             ),
             example=10555,
             gt=0
@@ -207,7 +236,7 @@ async def get_post_comments(
             gt=0,
             lt=101
         ),
-        search: Optional[str] = Query(
+        search_: Optional[str] = Query(
             None,
             title="Search",
             description="The search query to filter comments by.",
@@ -233,7 +262,7 @@ async def get_post_comments(
             post_id,
             page=page,
             per_page=per_page,
-            search=search,
+            search=search_,
             order_by=order_by.value if order_by else None,
             order=order.value if order else None
         )

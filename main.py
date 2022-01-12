@@ -8,10 +8,10 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 import cfg
-from api import FRoidAPIError
+from api import FRoidAPIError, ParserError
 from database import db
 from routers import posts, users
-from routers.base import api_session
+from routers.base import api_session, raise_error
 
 base_router = APIRouter(
     prefix="/v1",
@@ -62,7 +62,7 @@ app.add_middleware(
 
 # override the default settings for the swagger UI
 @app.get(cfg.DOCS_URL, include_in_schema=False)
-def overriden_swagger_docs() -> HTMLResponse:
+def overridden_swagger_docs() -> HTMLResponse:
     """Override the default swagger UI settings."""
     return get_swagger_ui_html(
         openapi_url=cfg.OPENAPI_URL,
@@ -95,6 +95,13 @@ async def http_exception_handler(_: Request, exc: StarletteHTTPException) -> JSO
         # The same 'status' key is used in the API error 'to_dict' method.
         exc.detail["status"] = exc.status_code
     return JSONResponse(status_code=exc.status_code, content=exc.detail)
+
+
+# handle API parser errors
+@app.exception_handler(ParserError)
+async def handle_parser_error(_: Request, __: ParserError) -> None:
+    """Handle parser errors."""
+    raise_error(500, message="Internal server error")
 
 
 # TODO: Complete startup and shutdown events

@@ -19,8 +19,8 @@ It can be retrieved from the environment variable `DATABASE_URL` or
 it can be set manually.
 """
 LOCAL_DB: bool = "sqlite" in SQLALCHEMY_DATABASE_URL
-"""Wheter the database is local or remote. If it is local,
-then add `check_same_thread` to the sessionmaker.
+"""Whether the database is local or remote. If it is local,
+then add `check_same_thread` to the :class:`sqlalchemy.orm.sessionmaker` options
 """
 
 # If we are using sqlite, we need to add `check_same_thread` to the sessionmaker.

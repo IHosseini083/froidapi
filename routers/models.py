@@ -57,28 +57,29 @@ class PaginatedResult(BaseModel):
     Model for paginated results that contain page number
     and number of items per page (e.g. search result, comments).
     """
+    total_pages: t.Optional[int] = Field(
+        None,
+        title="Total Pages",
+        description="The total number of pages available for the result.",
+    )
     page: int = Field(
         ...,
-        description="The page number of the result.",
+        title="Page",
+        description="The current page number.",
         example=1,
         gt=0
     )
     items_count: int = Field(
         ...,
+        title="Items Count",
         description="The number of items returned in the result.",
         example=1
     )
     items: t.List = Field(
         ...,
-        description="The list of items in the result.",
-        example=[
-            {
-                "id": 12350,
-                "title": "clash of clans",
-                "url": "https://www.farsroid.com/clash-of-clans/"
-            }
-        ],
-        max_items=100,
+        title="Items",
+        description="An array of items returned in the result.",
+        max_items=100
     )
 
 

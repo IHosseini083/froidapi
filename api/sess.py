@@ -18,15 +18,16 @@ from .exceptions import (
 
 class Session:
     """An asynchronous session for requesting `farsroid.com` endpoints.
-    
+
     Parameters:
         session (:class:`aiohttp.ClientSession`): The session to use for making requests.
-        html_parser (`str`, optional): The HTML parser to use for parsing the HTML response.
+        html_parser (`str`, optional): The HTML parser to use for parsing the HTML responses
+        as :class:`BeautifulSoup` objects.
 
     :class:`Session` is a wrapper for :class:`aiohttp.ClientSession` that can
     validate the request and response and return various types of data
     (`json`, `text` and :class:`BeautifulSoup` object).
-    
+
     Default HTML parser for :class:`BeautifulSoup` is `lxml` but you can
     specify another parser by setting the `html_parser` argument in the constructor.
     """
@@ -35,19 +36,20 @@ class Session:
     """Base URL for the `farsroid.com` API."""
     DEFAULT_HTML_PARSER: ClassVar[str] = "lxml"
     """Default HTML parser for :class:`BeautifulSoup`."""
-
-    __slots__ = ("_sess", "_headers", "_html_parser")
+    REQ_HEADERS: ClassVar[Dict[str, str]] = {
+        "Host": "www.farsroid.com",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0",
+    }
+    """Headers to be added to every request."""
+    
+    __slots__ = ("_sess", "_html_parser")
 
     def __init__(self, session: "ClientSession", html_parser: Optional[str] = None) -> None:
         self._html_parser = html_parser or self.DEFAULT_HTML_PARSER
         if not isinstance(self._html_parser, str):
-            raise TypeError("html_parser must be a string")
+            raise TypeError("html_parser must be a string or None")
         self._sess = session
-        self._headers: Dict[str, str] = {
-            "Host": "www.farsroid.com",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0",
-        }
-        self._sess.headers.update(self._headers)
+        self._sess.headers.update(self.REQ_HEADERS)
 
     def __enter__(self) -> "Session":
         return self
@@ -62,7 +64,6 @@ class Session:
         """Validate the given response and return it if everything was ok."""
         if not url.startswith(self.BASE_URL):
             raise ValueError(f"Invalid URL: {url!r}")
-        # TODO: validate response status code
         st_code = response.status
         if st_code not in (200, 302, 304):
             if st_code == 400:
@@ -77,27 +78,26 @@ class Session:
 
     async def request(self, method: str, endpoint: str, **kwargs) -> ClientResponse:
         """Make a request to the given URL and return the response.
-        
+
         Parameters:
             method (`str`): The HTTP method to use.
             endpoint (`str`): The URL endpoint to request.
             **kwargs: Additional keyword arguments to pass to :meth:`aiohttp.ClientSession.request` method.
-            
+
         Returns:
             :class:`aiohttp.ClientResponse`: The response object.
         """
-        # Reopen the session if it's closed
         url = urljoin(self.BASE_URL, endpoint)
         resp = await self._sess.request(method, url, **kwargs)
         return await self._response_validator(resp, url)
 
     async def get_json(self, endpoint: str, **kwargs) -> Any:
         """Make a GET request to the given URL and return the response as JSON data.
-        
+
         Parameters:
             endpoint (`str`): The URL endpoint to request.
             **kwargs: Additional keyword arguments to pass to :meth:`Session.request` method.
-            
+
         Returns:
             `dict`: The JSON response.
         """
@@ -106,11 +106,11 @@ class Session:
 
     async def get_text(self, endpoint: str, **kwargs) -> str:
         """Make a GET request to the given URL and return the response as text.
-        
+
         Parameters:
             endpoint (`str`): The URL endpoint to request.
             **kwargs: Additional keyword arguments to pass to :meth:`Session.request` method.
-            
+
         Returns:
             `str`: The text response.
         """
@@ -119,11 +119,11 @@ class Session:
 
     async def get_soup(self, endpoint: str, **kwargs) -> BeautifulSoup:
         """Make a GET request to the given URL and return the response as a :class:`BeautifulSoup` object.
-        
+
         Parameters:
             endpoint (`str`): The URL endpoint to request.
             **kwargs: Additional keyword arguments to pass to :meth:`Session.request` method.
-            
+
         Returns:
             :class:`BeautifulSoup`: The BeautifulSoup object.
         """

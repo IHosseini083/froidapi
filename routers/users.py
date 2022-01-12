@@ -44,7 +44,8 @@ def user_auth_handler(db: Session, user: UserCredentials) -> models.User:
         raise_error(401, message=str(e))
     except UserNotFoundError as e:
         raise_error(404, message=str(e))
-    return db_user
+    else:
+        return db_user
 
 
 # Because we are using SQLAlchemy as db, we should use
@@ -99,7 +100,7 @@ def delete_me(
 
 
 @router.put(
-    "/me/chapwd",
+    "/me/change-password",
     response_model=schemas.RegisteredUser,
     summary="Change user's password",
     response_description="The user's profile data.",
@@ -178,7 +179,7 @@ def revoke_token(
     db_user = user_auth_handler(db, user)
     try:
         db_utils.revoke_token(db, db_user)
-    except TokenNotFoundError as e:
+    except TokenNotFoundError:
         raise_error(
             404,
             message=f"User {user.username!r} does not have any token to revoke."

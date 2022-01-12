@@ -1,13 +1,13 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import urlencode
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
-    from .models import PostDownloadPgae
+    from .models import PostDownloadPage
 
 from .exceptions import BadRequestError
-from .models import Comment
-from .parsers import PostParser
+from .models import Comment, LegacySearchItem
+from .parsers import LegacySearchParser, PostParser
 from .sess import Session
 from .utils import render_content
 
@@ -33,6 +33,29 @@ class APIHandler:
         """Close the API session."""
         await self._sess.close()
 
+    async def legacy_search(self, query: str, page: Optional[int] = None) -> Tuple[List[LegacySearchItem], int]:
+        """
+        Search for posts only by scraping the page and not using the farsroid `JSON`
+        API. This type of searching has low performance and is not recommended but
+        can be useful for some users to get more info from search results. 
+        (e.g. post thumbnail, description, etc.)
+
+        Parameters:
+            query (`str`): The query to search for.
+            page (`int`, optional): The page number to fetch.
+
+        Returns:
+            A tuple of a list of :class:`LegacySearchItem` objects 
+            and the total number of available pages for the search query.
+        """
+        page_num = page or 1
+        if page_num > 1:
+            endpoint = f"page/{page_num}/?s={query}"
+        else:
+            endpoint = f"?s={query}"
+        parser = LegacySearchParser(await self._sess.get_soup(endpoint))
+        return parser.parsed(), parser.total_pages
+    
     async def search(
             self,
             query: str,
@@ -47,7 +70,9 @@ class APIHandler:
             per_page (`int`, optional): The number of results per page.
 
         Returns:
-            `List[Dict[str, Any]]`: A list of search results.
+            A tuple of a list of :class:`LegacySearchItem` objects and 
+            the total number of available pages for the search query if `legacy` mode is enabled 
+            or a list of :class:`Dict[str, Any]` objects if not using the legacy search.
         """
         params = {"search": query, "page": page, "per_page": per_page}
         # make sure to remove None values from params
@@ -78,7 +103,6 @@ class APIHandler:
         Returns:
             `List[Comment]`: A list of :class:`Comment` objects.
         """
-        # TODO: Add comment related arguments to the API call => DONE
         if by not in ["post", "parent", "comment"]:
             raise BadRequestError(f"Invalid value for `by`: {by!r}", 400)
         if not isinstance(_id, int):
@@ -106,14 +130,14 @@ class APIHandler:
             for comment in comments
         ]
 
-    async def get_post(self, post_id: int) -> "PostDownloadPgae":
+    async def get_post(self, post_id: int) -> "PostDownloadPage":
         """Get a post's download page data from `farsroid.com` by its ID.
 
         Parameters:
             post_id (`int`): The post ID to get.
 
         Returns:
-            A :class:`PostDownloadPgae` object containing data like the post's title, download links, etc.
+            A :class:`PostDownloadPage` object containing data like the post's title, download links, etc.
         """
         post_soup = await self._sess.get_soup(f"/?p={post_id}")
         parser = PostParser(post_soup)

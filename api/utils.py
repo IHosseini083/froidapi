@@ -12,12 +12,9 @@ def render_content(content: str) -> str:
     return soup.get_text(separator=" ", strip=True)
 
 
-def by_pattern(pattern: str, text: Union[str, Iterable[str]]) -> Optional[Union[str, Iterable[str]]]:
-    """Finds a match by a pattern in a string or an iterable of strings."""
-    if isinstance(text, str):
-        match = re.search(pattern, text)
-        if match:
-            return match.group()
-    elif isinstance(text, Iterable):
-        return [match.group() for match in re.finditer(pattern, text) if match]
+def by_pattern(pattern: str, text: str) -> Optional[str]:
+    """Returns the first match of the given pattern in the given text."""
+    pattern_re = re.compile(pattern)
+    if pattern_re.search(text):
+        return pattern_re.search(text).group()
     return
