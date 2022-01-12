@@ -1,12 +1,9 @@
-from typing import Dict, Any, Optional
-
-from aiohttp import ClientSession
-from fastapi.exceptions import HTTPException
+from typing import Any, Dict, Optional
 
 from api import APIHandler as FroidAPIHandler
+from fastapi.exceptions import HTTPException
 
-api_session = ClientSession()
-api_handler = FroidAPIHandler(api_session)
+api_handler = FroidAPIHandler()
 
 
 def raise_error(error_code: int, headers: Optional[Dict[str, Any]] = None, **kwargs) -> None:

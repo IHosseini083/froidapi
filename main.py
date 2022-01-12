@@ -11,7 +11,7 @@ import cfg
 from api import FRoidAPIError, ParserError
 from database import db
 from routers import posts, users
-from routers.base import api_session, raise_error
+from routers.base import api_handler, raise_error
 
 base_router = APIRouter(
     prefix="/v1",
@@ -115,4 +115,4 @@ async def startup_event() -> None:
 async def shutdown_event() -> None:
     """Operations to perform when the server shuts down."""
     # TODO: close database connection and API session for requests
-    await api_session.close()
+    await api_handler.close()
