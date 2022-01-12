@@ -60,7 +60,7 @@ class Session:
         if not url.startswith(self.BASE_URL):
             raise ValueError(f"Invalid URL: {url!r}")
         st_code = response.status_code
-        if st_code not in (200, 302, 304):
+        if st_code not in (200, 301, 302, 304):
             if st_code == 400:
                 raise BadRequestError(f"Bad request", st_code)
             elif st_code in (401, 403):
@@ -83,7 +83,7 @@ class Session:
             :class:`httpx.Response`: The response object.
         """
         url = urljoin(self.BASE_URL, endpoint)
-        resp = await self._sess.request(method, url, **kwargs)
+        resp = await self._sess.request(method, url, follow_redirects=True, **kwargs)
         return self._response_validator(resp, url)
 
     async def get_json(self, endpoint: str, **kwargs) -> Any:
