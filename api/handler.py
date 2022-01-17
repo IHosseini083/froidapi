@@ -12,7 +12,16 @@ from .utils import render_content
 
 
 class APIHandler:
-    """A handler for API calls and responses."""
+    """An API handler for interacting with the farsroid endpoints and parsing the results.
+
+    Parameters:
+        html_parser (`str`, optional): The HTML parser to use (`lxml`, `html.parser`, etc.).
+        
+    * html parser will be used to parse the HTML of a page and convert it to a :class:`bs4.BeautifulSoup` object.
+
+    Attributes:
+        _sess (:class:`Session`): The :class:`~api.sess.Session` object used to send requests.
+    """
 
     __slots__ = ("_sess",)
 
@@ -25,8 +34,13 @@ class APIHandler:
     async def __aenter__(self) -> "APIHandler":
         return self
 
-    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+    async def __aexit__(self, *args) -> None:
         await self.close()
+
+    @property
+    def session(self) -> Session:
+        """The :class:`api.sess.Session` object used to send requests."""
+        return self._sess
 
     async def close(self) -> None:
         """Close the API session."""
@@ -54,7 +68,7 @@ class APIHandler:
             endpoint = f"?s={query}"
         parser = LegacySearchParser(await self._sess.get_soup(endpoint))
         return parser.parsed(), parser.total_pages
-    
+
     async def search(
             self,
             query: str,

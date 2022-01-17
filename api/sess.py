@@ -37,6 +37,10 @@ class Session:
     :class:`Session` is a wrapper for :class:`httpx.AsyncClient` that can
     validate the request and response and return various types of data
     (`json`, `text` and :class:`BeautifulSoup` object).
+    
+    To request a URL that is not `farsroid.com` endpoints, use the
+    :meth:`Session.client` method to get a :class:`httpx.AsyncClient` object and
+    then use the :meth:`httpx.AsyncClient.request` method on it.
 
     Default HTML parser for :class:`BeautifulSoup` is `lxml` but you can
     specify another parser by setting the `html_parser` argument in the constructor.
@@ -58,8 +62,15 @@ class Session:
         self._html_parser = html_parser or self.DEFAULT_HTML_PARSER
         if not isinstance(self._html_parser, str):
             raise TypeError("html_parser must be a string or None")
-        self._sess = AsyncClient(follow_redirects=True)
-        self._sess.headers.update(self.REQ_HEADERS)
+        self._sess = AsyncClient(follow_redirects=True, headers=self.REQ_HEADERS)
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}"
+            f"(html_parser={self._html_parser!r}, "
+            f"base_url={self.BASE_URL!r}, "
+            f"alive={not self._sess.is_closed})"
+        )
 
     def __enter__(self) -> "Session":
         return self
@@ -69,6 +80,14 @@ class Session:
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         await self.close()
+
+    @property
+    def client(self) -> AsyncClient:
+        """
+        Return the underlying asynchronous :class:`httpx.AsyncClient` object used 
+        by the :class:`api.sess.Session` object to make requests.
+        """
+        return self._sess
 
     async def request(self, method: str, endpoint: str, **kwargs) -> Response:
         """Make a request to the given URL and return the response.
@@ -82,8 +101,7 @@ class Session:
             :class:`httpx.Response`: The response object.
         """
         url = urljoin(self.BASE_URL, endpoint)
-        resp = await self._sess.request(method, url, **kwargs)
-        return _validate_response(resp)
+        return _validate_response(await self._sess.request(method, url, **kwargs))
 
     async def get_json(self, endpoint: str, **kwargs) -> Any:
         """Make a GET request to the given URL and return the response as JSON data.

@@ -1,5 +1,5 @@
 import os
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, Iterator
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -25,11 +25,16 @@ then add `check_same_thread` to the :class:`sqlalchemy.orm.sessionmaker` options
 
 # If we are using sqlite, we need to add `check_same_thread` to the sessionmaker.
 engine_kwargs: Dict[str, Any] = {} if not LOCAL_DB else {"check_same_thread": False}
+"""Keyword arguments for the database engine creation.
+If the database is local, then add the `check_same_thread` option for 
+`SQLite` databases (it lets us to use different threads for the database). 
+"""
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     # If we're using SQLite, we need to specify the below option.
     connect_args=engine_kwargs,
 )
+"""Database engine to connect to the database and perform queries."""
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 """Session factory for SQLAlchemy, which is used to create a session."""
 Base = declarative_base()
@@ -37,7 +42,8 @@ Base = declarative_base()
 
 
 # get db session
-def get_session() -> "Session":
+def get_session() -> Iterator["Session"]:
+    """Yield the local database session and close it after the function is done."""
     sess = SessionLocal()
     try:
         yield sess
