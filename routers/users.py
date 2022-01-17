@@ -160,8 +160,7 @@ def create_token(
 ) -> models.Token:
     db_user = user_auth_handler(db, user)
     if db_user.token:
-        raise_error(
-            400, message=f"User {user.username!r} already has a token.")
+        raise_error(400, message=f"User {user.username!r} already has a token.")
     return db_utils.create_token(db, db_user)
 
 

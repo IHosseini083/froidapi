@@ -97,15 +97,7 @@ class BaseParser(ABC):
                 "Parser keys must be strings, not {}".format(type(key))
             )
         setattr(self, key, value)
-
-    def __iter__(self) -> Iterator[Any]:
-        """Iterate over the parsed data."""
-        yield from self.parsed().items()
-
-    def __next__(self) -> Any:
-        """Return the next item in the parsed data."""
-        return next(iter(self))
-
+        
     def __contains__(self, key: str) -> bool:
         return self[key] is not None
 
@@ -252,7 +244,7 @@ class PostParser(BaseParser):
         if not rps:
             return
         # articles that has a class with pattern "post-\d+"
-        related_articles = rps.find_all(class_=re.compile(r"^post-\d+"))
+        related_articles = rps.find_all(class_=re.compile(r"post-\d+"))
         if not related_articles:
             return
         # TODO: return a list of RelatedPost objects

@@ -149,3 +149,4 @@ cython_debug/
 # Custom files
 run.bat
 TODO.txt
+*.ipynb
