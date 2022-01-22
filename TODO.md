@@ -1,5 +1,5 @@
 
-# TODO 📝
+# TODOs 📝
 
 Write your TODOs here and work on them without getting lost in your journey.
 
