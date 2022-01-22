@@ -145,3 +145,9 @@ It is by contributing that you can improve the quality of the project and help o
 ## TODOs 📝
 
 Check [here](TODO.md) to see the list of things that have to be done or fixed.
+
+## Screenshots 📸
+
+![Docs page](https://github.com/IHosseini083/froidapi/blob/master/screenshots/froidapi_v1_ss1.png)
+![Getting post's stats](https://github.com/IHosseini083/froidapi/blob/master/screenshots/froidapi_v1_ss2.png)
+![Using legacy search](https://github.com/IHosseini083/froidapi/blob/master/screenshots/froidapi_v1_ss3.png)
