@@ -2,7 +2,7 @@ from typing import Any, ClassVar, Dict, Optional
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
-from httpx import AsyncClient, Response
+from httpx import AsyncClient, ConnectError, ConnectTimeout, Response 
 
 from .exceptions import (
     AccessDeniedError,
@@ -101,7 +101,13 @@ class Session:
             :class:`httpx.Response`: The response object.
         """
         url = urljoin(self.BASE_URL, endpoint)
-        return _validate_response(await self._sess.request(method, url, **kwargs))
+        try:
+            return _validate_response(await self._sess.request(method, url, **kwargs))
+        except (ConnectError, ConnectTimeout):
+            raise FRoidAPIError(
+                f"Connection establishment to farsroid.com failed",
+                500
+            )
 
     async def get_json(self, endpoint: str, **kwargs) -> Any:
         """Make a GET request to the given URL and return the response as JSON data.
