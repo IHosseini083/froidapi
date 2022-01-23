@@ -124,6 +124,41 @@ This is because file-based databases are not supported by Heroku, and they will 
 
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
+## How to use the API 🤔
+
+Now you may be wondering how to use the API after you have deployed it to Heroku (or any other remote server) or run it locally.
+If you go ahead and reach the `http://<YOUR_APP_NAME>.herokuapp.com/v1/docs` in your browser, you will see the documentation of the API.
+There are two sections in the documentation:
+
+- **Users**: This section contains the endpoints that you can use to create, update, delete and retrieve users and their information (e.g. email, token, etc.).
+- **Posts**: This section contains the endpoints that you can use to actually interact with [Farsroid](https://www.farsroid.com) posts.
+
+The **Posts** section requires you to have a valid token in the `X-API-Key` header of your requests.
+How to get a valid token? Follow the steps below:
+
+1. Create a new user with the `POST /v1/users/register` endpoint.
+2. Now create a new token with the `POST /v1/users/me/token/new` endpoint (This generates a new random token for you in the database).
+
+⚠️ See the API documentation for more details about the endpoints and their parameters.
+
+How to use the generated token? Add the `X-API-Key` header to your requests with the token you generated:
+
+```python
+import requests
+# headers to be sent with the request:
+headers = {
+    'X-API-Key': '<YOUR_TOKEN>'
+}
+# make a request to the endpoint:
+query = "Spotify"
+url = f"https://<YOUR_APP_NAME>.herokuapp.com/v1/posts/search?q={query}"
+r = requests.get(url, headers=headers)
+# print the response:
+print(r.json())  # you can also use `r.text` to get the response as a string
+```
+
+If you want to test the API from the documentation page, you can pass your token to the `Authorize` section of the documentation page.
+
 ## Documentation 📖
 
 To see the API documentation, you can go to `/v1/docs` endpoint in your browser.
