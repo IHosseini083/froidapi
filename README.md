@@ -122,6 +122,9 @@ and then `git push heroku master` to deploy your changes to Heroku.
 If you are not using `PostgreSQL`, you can use any other database that Heroku provides in a paid plan.
 This is because file-based databases are not supported by Heroku, and they will be removed at most in the next few hours.
 
+Full documentation to deploy your app on Heroku using git can be found [here](https://devcenter.heroku.com/articles/git).
+You can also deploy your app using [Github integration](https://devcenter.heroku.com/articles/github-integration) for Heroku.
+
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
 ## How to use the API 🤔
