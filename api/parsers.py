@@ -53,10 +53,9 @@ def _parse_post_search_result(post: Any) -> Dict[str, Any]:
         "description": post.find(class_="excerpt").get_text(strip=True, separator=" "),
         "meta": _parse_post_meta_search(post),
     }
-    if bookmark_btn:
-        if bookmark_btn.get("data-id"):
-            post_id = by_pattern(r"\d+", bookmark_btn.get("data-id"))
-            data["post_id"] = int(post_id) if post_id else None
+    if bookmark_btn and bookmark_btn.get("data-id"):
+        post_id = by_pattern(r"\d+", bookmark_btn.get("data-id"))
+        data["post_id"] = int(post_id) if post_id else None
     return data
 
 
@@ -86,16 +85,12 @@ class BaseParser(ABC):
 
     def __getitem__(self, key: str) -> Any:
         if not isinstance(key, str):
-            raise TypeError(
-                "Parser keys must be strings, not {}".format(type(key))
-            )
+            raise TypeError(f"Parser keys must be strings, not {type(key)}")
         return getattr(self, key, None)
 
     def __setitem__(self, key: str, value: Any) -> None:
         if not isinstance(key, str):
-            raise TypeError(
-                "Parser keys must be strings, not {}".format(type(key))
-            )
+            raise TypeError(f"Parser keys must be strings, not {type(key)}")
         setattr(self, key, value)
         
     def __contains__(self, key: str) -> bool:

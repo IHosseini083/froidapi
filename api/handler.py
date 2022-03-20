@@ -62,10 +62,7 @@ class APIHandler:
             and the total number of available pages for the search query.
         """
         page_num = page or 1
-        if page_num > 1:
-            endpoint = f"page/{page_num}/?s={query}"
-        else:
-            endpoint = f"?s={query}"
+        endpoint = f"page/{page_num}/?s={query}" if page_num > 1 else f"?s={query}"
         parser = LegacySearchParser(await self._sess.get_soup(endpoint))
         return parser.parsed(), parser.total_pages
 
@@ -124,11 +121,7 @@ class APIHandler:
         query = urlencode({by: _id, **{k: v for k, v in kwargs.items() if v}})
         endpoint = "/wp-json/wp/v2/comments"
 
-        if by != "comment":
-            endpoint += f"?{query}"
-        else:
-            endpoint += f"/{_id}"
-
+        endpoint += f"?{query}" if by != "comment" else f"/{_id}"
         comments: List[Dict[str, Any]] = await self._sess.get_json(endpoint)
         return [
             Comment(

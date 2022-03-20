@@ -17,13 +17,13 @@ def _validate_response(response: Response) -> Response:
     st_code = response.status_code
     if st_code not in (200, 301, 302, 304):
         if st_code == 400:
-            raise BadRequestError(f"Bad request", st_code)
+            raise BadRequestError("Bad request", st_code)
         elif st_code in (401, 403):
-            raise AccessDeniedError(f"Access denied", st_code)
+            raise AccessDeniedError("Access denied", st_code)
         elif st_code == 404:
-            raise NotFoundError(f"Not found", st_code)
+            raise NotFoundError("Not found", st_code)
         else:
-            raise FRoidAPIError(f"Unknown error", st_code)
+            raise FRoidAPIError("Unknown error", st_code)
     return response
 
 
@@ -104,10 +104,7 @@ class Session:
         try:
             return _validate_response(await self._sess.request(method, url, **kwargs))
         except (ConnectError, ConnectTimeout):
-            raise FRoidAPIError(
-                f"Connection establishment to farsroid.com failed",
-                500
-            )
+            raise FRoidAPIError("Connection establishment to farsroid.com failed", 500)
 
     async def get_json(self, endpoint: str, **kwargs) -> Any:
         """Make a GET request to the given URL and return the response as JSON data.
