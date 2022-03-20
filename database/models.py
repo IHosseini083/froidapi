@@ -27,10 +27,7 @@ class User(Base):
     """User's token (if any)."""
 
     def __repr__(self) -> str:
-        return "%s(%s)" % (
-            self.__class__.__name__,
-            ", ".join(map(lambda k, v: f"{k}={v!r}", self.json().items()))
-        )
+        return f'{self.__class__.__name__}({", ".join(map(lambda k, v: f"{k}={v!r}", self.json().items()))})'
 
     def json(self) -> Dict[str, Any]:
         """Return a JSON representation of the user."""
@@ -59,10 +56,7 @@ class Token(Base):
     """Creation datetime of the token."""
 
     def __repr__(self) -> str:
-        return "%s(%s)" % (
-            self.__class__.__name__,
-            ", ".join(map(lambda k, v: f"{k}={v!r}", self.json().items()))
-        )
+        return f'{self.__class__.__name__}({", ".join(map(lambda k, v: f"{k}={v!r}", self.json().items()))})'
 
     def json(self) -> Dict[str, Any]:
         """Return a JSON representation of the token."""

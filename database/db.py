@@ -24,7 +24,10 @@ then add `check_same_thread` to the :class:`sqlalchemy.orm.sessionmaker` options
 """
 
 # If we are using sqlite, we need to add `check_same_thread` to the sessionmaker.
-engine_kwargs: Dict[str, Any] = {} if not LOCAL_DB else {"check_same_thread": False}
+engine_kwargs: Dict[str, Any] = (
+    {"check_same_thread": False} if LOCAL_DB else {}
+)
+
 """Keyword arguments for the database engine creation.
 If the database is local, then add the `check_same_thread` option for 
 `SQLite` databases (it lets us to use different threads for the database). 
